@@ -1,0 +1,78 @@
+import time 
+import random
+from joblib import Parallel, delayed
+
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if(arr[j]> arr[j+1]):
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+
+def parellel_bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        Parallel(n_jobs=2)(delayed(swap)(arr,j) for j in range(0,n-i-1,2))
+        Parallel(n_jobs=2)(delayed(swap)(arr,j) for j in range(1,n-i-1,2))
+
+def swap(arr,j):
+    if(j+1 < len(arr) and arr[j] > arr[j+1]):
+        arr[j], arr[j+1] = arr[j+1], arr[j]
+
+def merge_sort(arr):
+    if len(arr) > 1:
+        mid = len(arr) //2 
+        left = arr[:mid]
+        right = arr[mid:]
+
+        merge_sort(left)
+        merge_sort(right)
+
+        merge(arr, left, right)
+
+def parellel_merge_sort(arr):
+    if(len(arr) > 1):
+        mid = len(arr) //2 
+        left = arr[:mid]
+        right = arr[mid:]
+
+        Parallel(n_jobs=2)(delayed(merge_sort)(part) for part in [left, right])
+        
+        merge(arr,left, right)
+
+
+def merge(arr,left, right):
+    i=j=k=0
+    while i < len(left) and j < len(right):
+        if(left[i] < right[j]):
+            arr[k] = left[i]
+            i+=1
+        else:
+            arr[k] = right[j]
+            j+=1
+        k+=1
+
+    while i < len(left):
+        arr[k] = left[i]
+        i+=1
+        k+=1
+    
+    while j < len(right):
+        arr[k] = right[j]
+        j+=1
+        k+=1
+
+def measure_time(sort_function, arr):
+    start_time = time.time()
+    sort_function(arr)
+    return time.time() - start_time
+
+# Example Usage
+
+arr= [random.randint(0,1000) for i in range(1000)]
+arr1, arr2, arr3,arr4 = arr[:],arr[:],arr[:],arr[:]
+
+print('Sequential Bubble Sort Time:', measure_time(bubble_sort, arr1))
+print('Parallel Bubble Sort Time:', measure_time(parellel_bubble_sort, arr2))
+print('Sequential Merge Sort Time:', measure_time(merge_sort, arr3))
+print('Parallel Merge Sort Time:', measure_time(parellel_merge_sort, arr4))
